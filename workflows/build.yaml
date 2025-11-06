@@ -1,4 +1,4 @@
-name: 构建多平台应用
+name: build_bubble
 
 on:
   push:
@@ -17,10 +17,10 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v3
 
-      - name: 设置 Python 3.9
+      - name: 设置 Python 3.13
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.13'
 
       - name: 安装 PyInstaller
         run: pip install pyinstaller
