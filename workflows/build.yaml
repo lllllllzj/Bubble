@@ -1,0 +1,47 @@
+name: 构建多平台应用
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v3
+
+      - name: 设置 Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: 安装 PyInstaller
+        run: pip install pyinstaller
+
+      - name: 构建 Windows 应用
+        if: matrix.os == 'windows-latest'
+        run: |
+          pyinstaller --name=文字气泡 --noconsole --onefile --clean script.py
+          cd dist
+          powershell Compress-Archive -Path 文字气泡.exe -DestinationPath 文字气泡-Windows.zip
+
+      - name: 构建 macOS 应用
+        if: matrix.os == 'macos-latest'
+        run: |
+          pyinstaller --name=文字气泡 --windowed --onefile --clean script.py
+          xattr -cr dist/文字气泡.app
+          ditto -c -k --keepParent dist/文字气泡.app 文字气泡-macOS.zip
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.os }}-build
+          path: |
+            *.zip
