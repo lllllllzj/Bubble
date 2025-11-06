@@ -1,19 +1,15 @@
-
 name: build_bubble
 
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:  # 允许手动触发
+  workflow_dispatch:
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        os: [windows-latest, macos-latest]
-
-    runs-on: ${{ matrix.os }}
-
+  build-windows:
+    name: 构建 Windows 版本
+    runs-on: windows-latest
+    
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
@@ -26,23 +22,46 @@ jobs:
       - name: 安装 PyInstaller
         run: pip install pyinstaller
 
-      - name: 构建 Windows 应用
-        if: matrix.os == 'windows-latest'
-        run: |
-          pyinstaller --name=文字气泡 --noconsole --onefile --clean script.py
-          cd dist
-          powershell Compress-Archive -Path 文字气泡.exe -DestinationPath 文字气泡-Windows.zip
+      - name: 构建应用
+        run: pyinstaller --name=文字气泡 --noconsole --onefile --clean script.py
 
-      - name: 构建 macOS 应用
-        if: matrix.os == 'macos-latest'
+      - name: 压缩文件
         run: |
-          pyinstaller --name=文字气泡 --windowed --onefile --clean script.py
-          xattr -cr dist/文字气泡.app
-          ditto -c -k --keepParent dist/文字气泡.app 文字气泡-macOS.zip
+          powershell Compress-Archive -Path dist\文字气泡.exe -DestinationPath 文字气泡-Windows.zip
 
       - name: 上传构建产物
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.os }}-build
-          path: |
-            *.zip
+          name: windows-build
+          path: 文字气泡-Windows.zip
+
+  build-macos:
+    name: 构建 macOS 版本
+    runs-on: macos-latest
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: 安装 PyInstaller
+        run: pip install pyinstaller
+
+      - name: 构建应用
+        run: pyinstaller --name=文字气泡 --windowed --onefile --clean script.py
+
+      - name: 移除隔离属性
+        run: xattr -cr dist/文字气泡.app
+
+      - name: 压缩文件
+        run: ditto -c -k --keepParent dist/文字气泡.app 文字气泡-macOS.zip
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-build
+          path: 文字气泡-macOS.zip
