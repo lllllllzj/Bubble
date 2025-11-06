@@ -1,0 +1,5 @@
+# 本项目使用 Python 3.13
+# 主要依赖项为 Python 标准库,无需额外安装第三方包
+
+# tkinter - Python 标准 GUI 库(通常随 Python 一起安装)
+# random - Python 标准随机数库
